@@ -1,3 +1,6 @@
 node_modules
 dist/
 output/
+
+test-error-output/
+test-ai-error-output/
