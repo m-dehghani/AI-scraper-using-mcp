@@ -53,11 +53,31 @@ export class InteractiveScraperService {
             });
 
             // Extract structured data based on the prompt
-            const structuredData = await this.extractDataBasedOnPrompt(
+            let structuredData = await this.extractDataBasedOnPrompt(
                 scrapedData,
                 parsedPrompt,
                 request.prompt,
             );
+
+            // If AI returned too few items, supplement with basic extraction and de-duplicate
+            if (Array.isArray(structuredData) && structuredData.length < 10) {
+                const supplemental = this.extractBasicData(
+                    scrapedData,
+                    parsedPrompt,
+                );
+                const seen = new Set<string>();
+                const merged: any[] = [];
+                const pushUnique = (item: any) => {
+                    const key = JSON.stringify(item);
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        merged.push(item);
+                    }
+                };
+                structuredData.forEach(pushUnique);
+                supplemental.forEach(pushUnique);
+                structuredData = merged.slice(0, 50);
+            }
 
             // Export to CSV
             let outputFile: string | undefined;
@@ -115,11 +135,21 @@ export class InteractiveScraperService {
                 this.logger.log(
                     'extractDataBasedOnPrompt - Using AI extraction',
                 );
-                return await this.extractWithAI(
+                const aiData = await this.extractWithAI(
                     scrapedData,
                     parsedPrompt,
                     originalPrompt,
                 );
+
+                // Fallback if AI returns no data
+                if (Array.isArray(aiData) && aiData.length > 0) {
+                    return aiData;
+                }
+
+                this.logger.warn(
+                    'AI returned no data, falling back to basic extraction',
+                );
+                return this.extractBasicData(scrapedData, parsedPrompt);
             } else {
                 this.logger.log(
                     'extractDataBasedOnPrompt - Using X-Ray extraction',
@@ -181,12 +211,16 @@ export class InteractiveScraperService {
 
         // Debug logging (can be removed in production)
         // this.logger.log('extractWithAI - Content length:', content.length);
-        // this.logger.log('extractWithAI - Title:', title);
-        // this.logger.log('extractWithAI - Content preview:', content.substring(0, 100));
+        this.logger.log('extractWithAI - Title:', title);
+        this.logger.log('extractWithAI - Content length:', content.length);
+        this.logger.log(
+            'extractWithAI - Content preview:',
+            content.substring(0, 200),
+        );
 
         // Check if we have sufficient content to extract real data
         // Use a lower threshold for testing or when content is clearly valid
-        const minContentLength = process.env.NODE_ENV === 'test' ? 50 : 500;
+        const minContentLength = process.env.NODE_ENV === 'test' ? 50 : 100;
 
         if (
             content.length < minContentLength ||
@@ -201,8 +235,8 @@ export class InteractiveScraperService {
             return [];
         }
 
-        // Create a detailed prompt for AI extraction
-        const aiPrompt = `
+        // Helper to build prompt per chunk
+        const buildPrompt = (chunk: string) => `
 You are a web scraping assistant. Extract the requested information from the web content.
 
 User Request: "${originalPrompt}"
@@ -210,7 +244,7 @@ Target: ${parsedPrompt.target}
 Fields to extract: ${parsedPrompt.fields.join(', ')}
 
 Web Content:
-${content.substring(0, 4000)}
+${chunk}
 
 CRITICAL INSTRUCTIONS:
 - Return ONLY a valid JSON array, no additional text, explanations, or markdown
@@ -224,82 +258,84 @@ CRITICAL INSTRUCTIONS:
 - For product names, use the actual names found in the content
 - If no real products/prices are found in the content, return an empty array []
 - If the content is insufficient (like "Just a moment..." or very short text), return an empty array []
+ - Return as many distinct items as present (up to 50). Do not omit items.
 
 Return only the JSON array with real data extracted from the content above:`;
 
-        try {
-            const aiResponse = await this.ollamaService.processPrompt(
-                aiPrompt,
-                {
-                    model: 'llama3.2:1b',
-                    temperature: 0.1, // Low temperature for consistent extraction
-                },
+        const chunkSize = 3500;
+        const chunks: string[] = [];
+        for (let i = 0; i < content.length; i += chunkSize) {
+            chunks.push(
+                content.substring(i, Math.min(i + chunkSize, content.length)),
             );
+        }
 
-            // Debug: Log the AI response to understand what's being generated
-            this.logger.log(
-                'AI Response:',
-                aiResponse.substring(0, 1000) + '...',
-            );
+        const aggregated: any[] = [];
+        const seen = new Set<string>();
 
-            // Try multiple methods to extract JSON from AI response
-            let extractedData = null;
-
+        const parseFromResponse = (aiResponse: string): any[] | null => {
             // Method 1: Look for JSON array pattern
-            const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-                this.logger.log(
-                    'JSON Match found:',
-                    jsonMatch[0].substring(0, 500) + '...',
-                );
-                extractedData = this.tryParseJson(jsonMatch[0]);
+            const arrayMatch = aiResponse.match(/\[[\s\S]*\]/);
+            if (arrayMatch) {
+                const arr = this.tryParseJson(arrayMatch[0]);
+                if (Array.isArray(arr)) return arr;
             }
-
-            // Method 2: If no array found, look for JSON object pattern
-            if (!extractedData) {
-                const objectMatch = aiResponse.match(/\{[\s\S]*\}/);
-                if (objectMatch) {
-                    this.logger.log(
-                        'JSON Object found:',
-                        objectMatch[0].substring(0, 500) + '...',
-                    );
-                    extractedData = this.tryParseJson(objectMatch[0]);
-                    if (extractedData && !Array.isArray(extractedData)) {
-                        extractedData = [extractedData]; // Convert single object to array
+            // Method 2: Object pattern
+            const objMatch = aiResponse.match(/\{[\s\S]*\}/);
+            if (objMatch) {
+                const obj = this.tryParseJson(objMatch[0]);
+                if (obj && !Array.isArray(obj)) return [obj];
+                if (Array.isArray(obj)) return obj;
+            }
+            // Method 3: Common prefixes
+            const prefixes = [
+                'JSON Array:',
+                'Result:',
+                'Data:',
+                'Extracted Data:',
+            ];
+            for (const prefix of prefixes) {
+                const idx = aiResponse.indexOf(prefix);
+                if (idx !== -1) {
+                    const after = aiResponse
+                        .substring(idx + prefix.length)
+                        .trim();
+                    const m = after.match(/\[[\s\S]*\]/);
+                    if (m) {
+                        const arr = this.tryParseJson(m[0]);
+                        if (Array.isArray(arr)) return arr;
                     }
                 }
             }
+            return null;
+        };
 
-            // Method 3: Try to find JSON after common prefixes
-            if (!extractedData) {
-                const prefixes = [
-                    'JSON Array:',
-                    'Result:',
-                    'Data:',
-                    'Extracted Data:',
-                ];
-                for (const prefix of prefixes) {
-                    const prefixIndex = aiResponse.indexOf(prefix);
-                    if (prefixIndex !== -1) {
-                        const afterPrefix = aiResponse
-                            .substring(prefixIndex + prefix.length)
-                            .trim();
-                        const jsonMatch = afterPrefix.match(/\[[\s\S]*\]/);
-                        if (jsonMatch) {
-                            extractedData = this.tryParseJson(jsonMatch[0]);
-                            break;
+        try {
+            for (const [idx, chunk] of chunks.entries()) {
+                this.logger.log(
+                    `AI extraction on chunk ${idx + 1}/${chunks.length}`,
+                );
+                const aiResponse = await this.ollamaService.processPrompt(
+                    buildPrompt(chunk),
+                    { model: 'llama3.2:1b', temperature: 0.1 },
+                );
+
+                const items = parseFromResponse(aiResponse);
+                if (items && items.length > 0) {
+                    for (const item of items) {
+                        const key = JSON.stringify(item);
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            aggregated.push(item);
                         }
                     }
                 }
             }
 
-            if (extractedData && Array.isArray(extractedData)) {
-                return extractedData;
-            } else {
-                throw new Error(
-                    'AI response does not contain valid JSON array',
-                );
+            if (aggregated.length > 0) {
+                return aggregated;
             }
+            throw new Error('AI response does not contain valid JSON array');
         } catch (error) {
             this.logger.warn(
                 'AI extraction failed, falling back to basic extraction:',

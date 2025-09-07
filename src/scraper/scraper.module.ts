@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { HtmlParserService } from './html-parser.service';
 import { XRayParserService } from './xray-parser.service';
 import { ScraperService } from './scraper.service';
@@ -18,6 +19,10 @@ import { McpClientService } from '../mcp/mcp-client.service';
         PromptParserService,
         CsvExportService,
         InteractiveScraperService,
+        {
+            provide: Logger,
+            useValue: new Logger(McpClientService.name),
+        },
     ],
     exports: [
         ScraperService,

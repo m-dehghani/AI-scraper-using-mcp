@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { TestHelpers } from '../utils/test-helpers';
-import { OllamaService } from 'src/ai/ollama.service';
-import { McpClientService } from 'src/mcp/mcp-client.service';
-import { AiModule } from 'src/ai/ai.module';
-import { ScraperModule } from 'src/scraper/scraper.module';
-import { McpModule } from 'src/mcp/mcp.module';
+import { OllamaService } from '../../src/ai/ollama.service';
+import { McpClientService } from '../../src/mcp/mcp-client.service';
+import { AiModule } from '../../src/ai/ai.module';
+import { ScraperModule } from '../../src/scraper/scraper.module';
+import { McpModule } from '../../src/mcp/mcp.module';
 
 describe('AppController (e2e)', () => {
     let app: INestApplication;

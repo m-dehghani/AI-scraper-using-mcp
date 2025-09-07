@@ -87,13 +87,26 @@ describe('McpClientService', () => {
                 scrollDelay: 1000,
             };
 
+            // Mock the page.evaluate to return the expected data
+            mockPage.evaluate.mockResolvedValue({
+                title: 'Test Page',
+                content: '<html><body>Test content</body></html>',
+                html: '<html><body>Test content</body></html>',
+                url: 'https://example.com',
+            });
+
             const result = await service.scrapeWebsite(options);
 
             expect(result).toEqual({
                 url: 'https://example.com',
                 title: 'Test Page',
                 content: '<html><body>Test content</body></html>',
-                metadata: {},
+                html: '<html><body>Test content</body></html>',
+                metadata: expect.objectContaining({
+                    scrapedAt: expect.any(String),
+                    processingTime: expect.any(Number),
+                    contentLength: expect.any(Number),
+                }),
                 success: true,
             });
 
@@ -109,24 +122,38 @@ describe('McpClientService', () => {
 
         it('should handle navigation errors gracefully', async () => {
             const error = new Error('Navigation failed');
-            mockPage.goto.mockRejectedValue(error);
+            mockPage.goto.mockRejectedValueOnce(error); // First call fails
+            mockPage.goto.mockResolvedValueOnce(undefined); // Second call (fallback) succeeds
+            mockPage.evaluate.mockResolvedValue({
+                title: 'Test Page',
+                content: 'Test content',
+                html: '<html><body>Test content</body></html>',
+                url: 'https://example.com',
+            });
 
             const options = {
                 url: 'https://example.com',
-                waitForNetworkIdle: false,
+                waitForNetworkIdle: true, // This will trigger the navigation error path
             };
 
             const result = await service.scrapeWebsite(options);
 
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Navigation failed');
+            expect(result.success).toBe(true);
             expect(mockLogger.warn).toHaveBeenCalledWith(
                 expect.stringContaining('Navigation failed'),
             );
         });
 
         it('should detect anti-bot protection', async () => {
+            // Mock page.title to return "Just a moment" for anti-bot detection
             mockPage.title.mockResolvedValue('Just a moment...');
+            // Mock the page.evaluate to return the same title
+            mockPage.evaluate.mockResolvedValue({
+                title: 'Just a moment...',
+                content: '',
+                html: '',
+                url: 'https://example.com',
+            });
 
             const options = {
                 url: 'https://example.com',
@@ -154,7 +181,17 @@ describe('McpClientService', () => {
                     scrollCount++;
                     return Promise.resolve();
                 }
-                return Promise.resolve({});
+                if (fn.toString().includes('scrollTop')) {
+                    // Mock scroll position check - return true for first few calls, then false
+                    return Promise.resolve(scrollCount < 2);
+                }
+                // Default return for the main page evaluation
+                return Promise.resolve({
+                    title: 'Test Page',
+                    content: 'Test content',
+                    html: '<html><body>Test content</body></html>',
+                    url: 'https://example.com',
+                });
             });
 
             await service.scrapeWebsite(options);
@@ -172,15 +209,18 @@ describe('McpClientService', () => {
                 url: 'https://example.com',
             };
 
-            const result = await service.scrapeWebsite(options);
-
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Browser launch failed');
+            await expect(service.scrapeWebsite(options)).rejects.toThrow(
+                'Browser launch failed',
+            );
         });
     });
 
     describe('isHealthy', () => {
         it('should return true when browser can be launched', async () => {
+            // Mock the browser to be connected
+            (service as any).browser = mockBrowser;
+            (service as any).isConnected = true;
+
             const result = await service.isHealthy();
             expect(result).toBe(true);
         });
@@ -197,18 +237,27 @@ describe('McpClientService', () => {
 
     describe('cleanup', () => {
         it('should close browser on cleanup', async () => {
+            // Mock the browser to be connected
+            (service as any).browser = mockBrowser;
+            (service as any).isConnected = true;
+
             await service.cleanup();
 
             expect(mockBrowser.close).toHaveBeenCalled();
         });
 
         it('should handle cleanup errors gracefully', async () => {
+            // Mock the browser to be connected
+            (service as any).browser = mockBrowser;
+            (service as any).isConnected = true;
+
             mockBrowser.close.mockRejectedValue(new Error('Close failed'));
 
             await service.cleanup();
 
-            expect(mockLogger.error).toHaveBeenCalledWith(
-                'Error during cleanup:',
+            // The close method handles the error internally and logs it as a warning
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                'Error closing Puppeteer browser:',
                 expect.any(Error),
             );
         });

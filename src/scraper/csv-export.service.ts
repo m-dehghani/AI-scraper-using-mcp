@@ -191,12 +191,62 @@ export class CsvExportService {
                     }
                 },
             );
+
+            // Additional pass: split full text into lines to capture more items
+            const fullText = scrapedData.content.text || '';
+            if (fullText && fullText.length > 0) {
+                const lines = fullText
+                    .split(/\n|\r|\.|\u2022|-|•/)
+                    .map((l: string) => l.trim())
+                    .filter((l: string) => l.length > 10);
+
+                const seen = new Set<string>();
+                data.forEach((d) => seen.add(d.product_name + '|' + d.price));
+
+                lines.forEach((line: string, idx: number) => {
+                    const priceMatch = line.match(
+                        /\$[\d,]+\.?\d*|€[\d,]+\.?\d*|£[\d,]+\.?\d*|¥[\d,]+\.?\d*|[\d,]+\.?\d*\s*(?:USD|EUR|GBP|JPY)/i,
+                    );
+                    if (
+                        priceMatch &&
+                        (this.looksLikeProduct(line) || line.length > 20)
+                    ) {
+                        const productName = this.extractProductName(line);
+                        const price = priceMatch[0];
+                        const key = productName + '|' + price;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            data.push({
+                                product_name: productName,
+                                price,
+                                content: line,
+                                section_type: 'line',
+                                index: idx,
+                                url: scrapedData.url || 'Unknown URL',
+                                title: scrapedData.title || 'No title',
+                                scraped_at: new Date().toISOString(),
+                                prompt,
+                            });
+                        }
+                    }
+                });
+            }
         }
 
-        // No fallback to general extraction - only export real product data
-
-        // No fallback data - only export real extracted data
-        // If no structured data found, return empty array (no fake data)
+        // If nothing found but we have substantial text, include a minimal row to avoid empty exports
+        if (data.length === 0 && scrapedData?.content?.text) {
+            const preview = scrapedData.content.text.substring(0, 120).trim();
+            if (preview.length > 0) {
+                data.push({
+                    product_name: scrapedData.title || 'No title',
+                    price: 'Price not found',
+                    content: preview,
+                    url: scrapedData.url || 'Unknown URL',
+                    scraped_at: new Date().toISOString(),
+                    prompt,
+                });
+            }
+        }
 
         return data;
     }

@@ -6,11 +6,12 @@ import { McpScrapingOptions, McpScrapingResult } from './interfaces';
 
 @Injectable()
 export class McpClientService {
-    private readonly logger = new Logger(McpClientService.name);
+    private readonly logger: Logger;
     private browser: Browser | null = null;
     private isConnected = false;
 
-    constructor() {
+    constructor(logger: Logger) {
+        this.logger = logger;
         // Add stealth plugin to avoid detection
         puppeteer.use(StealthPlugin());
     }

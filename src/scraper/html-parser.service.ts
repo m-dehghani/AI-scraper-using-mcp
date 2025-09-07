@@ -239,6 +239,23 @@ export class HtmlParserService {
             }
         });
 
+        // Extract common product-like containers (cards, items, listings)
+        // This helps capture many ecommerce UIs which don't use <p> or explicit price-only elements
+        '[class*="product"], [class*="item"], [class*="card"], [class*="listing"], .product, .product-card, .product-item'
+            .split(',')
+            .map((s) => s.trim())
+            .forEach((selector) => {
+                $(selector).each((_, element) => {
+                    const text = $(element).text().trim();
+                    if (text && text.length > 30) {
+                        sections.push({
+                            type: 'other',
+                            content: text,
+                        });
+                    }
+                });
+            });
+
         // Extract price-related elements
         $(
             '[class*="price"], [class*="cost"], [class*="amount"], [id*="price"], [id*="cost"], a[href*="price"]',
