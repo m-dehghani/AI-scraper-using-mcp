@@ -1,1 +1,0 @@
-{"version":3,"file":"mcp.types.js","sourceRoot":"","sources":["../../src/mcp/mcp.types.ts"],"names":[],"mappings":";;AACA,oBAgBC;AAhBD,SAAgB,IAAI,CAAC,OAIpB;IACG,OAAO,UACH,MAAW,EACX,WAAmB,EACnB,UAA8B;QAG9B,IAAI,UAAU,CAAC,KAAK,EAAE,CAAC;YACnB,UAAU,CAAC,KAAK,CAAC,YAAY,GAAG,OAAO,CAAC;QAC5C,CAAC;QACD,OAAO,UAAU,CAAC;IACtB,CAAC,CAAC;AACN,CAAC"}
