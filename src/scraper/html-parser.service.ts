@@ -46,7 +46,7 @@ export class HtmlParserService {
 
         // If specific selectors provided, use them
         if (selectors.length > 0) {
-            selectors.forEach(selector => {
+            selectors.forEach((selector) => {
                 $(selector).each((_, element) => {
                     const text = $(element).text().trim();
                     if (text) {
@@ -67,7 +67,7 @@ export class HtmlParserService {
                 '.container',
             ];
 
-            defaultSelectors.forEach(selector => {
+            defaultSelectors.forEach((selector) => {
                 $(selector).each((_, element) => {
                     const text = $(element).text().trim();
                     if (text && text.length > 100) {
@@ -85,7 +85,7 @@ export class HtmlParserService {
             }
         }
 
-        return content.filter(text => text.length > 50); // Filter out very short content
+        return content.filter((text) => text.length > 50); // Filter out very short content
     }
 
     private removeUnwantedElements($: cheerio.Root): void {
@@ -110,7 +110,27 @@ export class HtmlParserService {
     }
 
     private extractText($: cheerio.Root): string {
-        return $('body').text().replace(/\s+/g, ' ').trim();
+        // First, try to extract price-specific content
+        const priceElements = $(
+            '[class*="price"], [class*="cost"], [class*="amount"], [id*="price"], [id*="cost"], a[href*="price"]',
+        );
+        let priceText = '';
+        priceElements.each((_, element) => {
+            const priceContent = $(element).text().trim();
+            if (priceContent && /\$[\d,]+\.?\d*/.test(priceContent)) {
+                priceText += priceContent + ' ';
+            }
+        });
+
+        // Get main text content
+        let text = $('body').text().replace(/\s+/g, ' ').trim();
+
+        // If we found price-specific content, prepend it
+        if (priceText) {
+            text = priceText + ' ' + text;
+        }
+
+        return text;
     }
 
     private extractLinks($: cheerio.Root): string[] {
@@ -215,6 +235,19 @@ export class HtmlParserService {
                             ? 'Unordered List'
                             : 'Ordered List',
                     items,
+                });
+            }
+        });
+
+        // Extract price-related elements
+        $(
+            '[class*="price"], [class*="cost"], [class*="amount"], [id*="price"], [id*="cost"], a[href*="price"]',
+        ).each((_, element) => {
+            const text = $(element).text().trim();
+            if (text && /\$[\d,]+\.?\d*/.test(text)) {
+                sections.push({
+                    type: 'price',
+                    content: text,
                 });
             }
         });

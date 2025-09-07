@@ -33,6 +33,12 @@ export class McpClientService {
                     '--no-first-run',
                     '--no-zygote',
                     '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor',
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-extensions',
+                    '--disable-plugins',
+                    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 ],
             });
 
@@ -69,13 +75,40 @@ export class McpClientService {
                 await page.setUserAgent(options.userAgent);
             }
 
-            // Navigate to the page
-            await page.goto(options.url, {
-                waitUntil: options.waitForNetworkIdle
-                    ? 'networkidle0'
-                    : 'domcontentloaded',
-                timeout: 30000,
-            });
+            // Navigate to the page with better timeout and retry logic
+            try {
+                await page.goto(options.url, {
+                    waitUntil: options.waitForNetworkIdle
+                        ? 'networkidle2'
+                        : 'domcontentloaded',
+                    timeout: 60000, // Increased timeout to 60 seconds
+                });
+
+                // Wait a bit more for dynamic content to load
+                await new Promise((resolve) => setTimeout(resolve, 3000));
+
+                // Check if we got blocked or got a "Just a moment" page
+                const title = await page.title();
+                if (
+                    title.includes('Just a moment') ||
+                    title.includes('Checking your browser')
+                ) {
+                    this.logger.log(
+                        'Detected anti-bot protection, waiting longer...',
+                    );
+                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds for protection to pass
+                }
+            } catch (error) {
+                this.logger.warn(
+                    `Navigation failed, trying with basic load: ${error.message}`,
+                );
+                // Fallback to basic load if networkidle fails
+                await page.goto(options.url, {
+                    waitUntil: 'load',
+                    timeout: 60000,
+                });
+                await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for content to load
+            }
 
             // Handle infinite scroll if needed
             if (options.maxScrolls && options.maxScrolls > 0) {
@@ -108,6 +141,7 @@ export class McpClientService {
                     processingTime,
                     contentLength: pageData.content?.length || 0,
                 },
+                success: true,
             };
         } catch (error) {
             this.logger.error('Puppeteer scraping failed:', error);
@@ -135,7 +169,7 @@ export class McpClientService {
             });
 
             // Wait for content to load
-            await new Promise(resolve => setTimeout(resolve, scrollDelay));
+            await new Promise((resolve) => setTimeout(resolve, scrollDelay));
 
             // Check if we can scroll more
             const canScrollMore = await page.evaluate(() => {
@@ -180,6 +214,14 @@ export class McpClientService {
             } catch (error) {
                 this.logger.warn('Error closing Puppeteer browser:', error);
             }
+        }
+    }
+
+    public async cleanup(): Promise<void> {
+        try {
+            await this.close();
+        } catch (error) {
+            this.logger.error('Error during cleanup:', error);
         }
     }
 }

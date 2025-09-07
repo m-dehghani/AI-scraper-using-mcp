@@ -17,7 +17,7 @@ export class OllamaService {
         options: OllamaOptions = {},
     ): Promise<string> {
         const {
-            model = 'llama3',
+            model = 'llama3.2:1b',
             temperature = 0.7,
             topP = 0.9,
             maxTokens = 2048,
@@ -47,7 +47,7 @@ export class OllamaService {
     public async analyzeScrapedContent(
         content: string,
         analysisType: 'summary' | 'extract' | 'categorize' = 'summary',
-        model: string = 'llama3',
+        model: string = 'llama3.2:1b',
     ): Promise<string> {
         const prompts = {
             summary: `Please provide a concise summary of the following web content. Focus on the main topics, key information, and important details:
@@ -74,7 +74,7 @@ Categorization:`,
     public async extractStructuredData(
         content: string,
         schema: string,
-        model: string = 'llama3',
+        model: string = 'llama3.2:1b',
     ): Promise<string> {
         const prompt = `Extract structured data from the following web content according to the specified schema. Return the data in JSON format:
 

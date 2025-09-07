@@ -8,4 +8,6 @@ export interface McpScrapingResult {
         processingTime: number;
         contentLength: number;
     };
+    success: boolean;
+    error?: string;
 }

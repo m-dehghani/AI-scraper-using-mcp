@@ -168,7 +168,7 @@ export class ScraperService {
     ): Promise<{ summary: string; keyPoints: string; categories: string }> {
         const {
             analysisType = 'summary',
-            model = 'llama3',
+            model = 'llama3.2:1b',
             chunkSize = 2000,
         } = options;
 
@@ -183,7 +183,7 @@ export class ScraperService {
             );
 
             // Process each chunk and combine results
-            const analysisPromises = chunks.map(chunk =>
+            const analysisPromises = chunks.map((chunk) =>
                 this.ollamaService.analyzeScrapedContent(
                     chunk,
                     analysisType,
