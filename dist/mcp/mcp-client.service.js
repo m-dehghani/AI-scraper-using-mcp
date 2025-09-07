@@ -111,7 +111,7 @@ let McpClientService = McpClientService_1 = class McpClientService {
             await page.evaluate(() => {
                 window.scrollTo(0, document.body.scrollHeight);
             });
-            await new Promise((resolve) => setTimeout(resolve, scrollDelay));
+            await new Promise(resolve => setTimeout(resolve, scrollDelay));
             const canScrollMore = await page.evaluate(() => {
                 const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
                 return scrollTop + clientHeight < scrollHeight - 10;

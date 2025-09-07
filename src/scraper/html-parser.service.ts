@@ -1,22 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
-
-export interface ParsedContent {
-    title: string;
-    text: string;
-    links: string[];
-    images: string[];
-    headings: string[];
-    metadata: Record<string, string>;
-    sections: ContentSection[];
-}
-
-export interface ContentSection {
-    type: 'heading' | 'paragraph' | 'list' | 'table' | 'other';
-    content: string;
-    level?: number; // For headings
-    items?: string[]; // For lists
-}
+import { ParsedContent, ContentSection } from './interfaces';
 
 @Injectable()
 export class HtmlParserService {
@@ -62,7 +46,7 @@ export class HtmlParserService {
 
         // If specific selectors provided, use them
         if (selectors.length > 0) {
-            selectors.forEach((selector) => {
+            selectors.forEach(selector => {
                 $(selector).each((_, element) => {
                     const text = $(element).text().trim();
                     if (text) {
@@ -83,7 +67,7 @@ export class HtmlParserService {
                 '.container',
             ];
 
-            defaultSelectors.forEach((selector) => {
+            defaultSelectors.forEach(selector => {
                 $(selector).each((_, element) => {
                     const text = $(element).text().trim();
                     if (text && text.length > 100) {
@@ -101,7 +85,7 @@ export class HtmlParserService {
             }
         }
 
-        return content.filter((text) => text.length > 50); // Filter out very short content
+        return content.filter(text => text.length > 50); // Filter out very short content
     }
 
     private removeUnwantedElements($: cheerio.Root): void {

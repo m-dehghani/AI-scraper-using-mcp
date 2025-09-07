@@ -1,37 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HtmlParserService, ParsedContent } from './html-parser.service';
+import { HtmlParserService } from './html-parser.service';
 import { OllamaService } from '../ai/ollama.service';
+import { McpClientService } from '../mcp/mcp-client.service';
+import { McpScrapingOptions } from '../mcp/interfaces';
 import {
-    McpClientService,
-    McpScrapingOptions,
-} from '../mcp/mcp-client.service';
-
-export interface ScrapingResult {
-    url: string;
-    title: string;
-    content: ParsedContent;
-    analysis: {
-        summary: string;
-        keyPoints: string;
-        categories: string;
-    };
-    metadata: {
-        scrapedAt: Date;
-        processingTime: number;
-        contentLength: number;
-    };
-}
-
-export interface ScrapingJobOptions {
-    maxScrolls?: number;
-    scrollDelay?: number;
-    waitForNetworkIdle?: boolean;
-    userAgent?: string;
-    viewport?: { width: number; height: number };
-    analysisType?: 'summary' | 'extract' | 'categorize';
-    model?: string;
-    chunkSize?: number;
-}
+    ScrapingResult,
+    ScrapingJobOptions,
+    ParsedContent,
+} from './interfaces';
 
 @Injectable()
 export class ScraperService {
@@ -207,7 +183,7 @@ export class ScraperService {
             );
 
             // Process each chunk and combine results
-            const analysisPromises = chunks.map((chunk) =>
+            const analysisPromises = chunks.map(chunk =>
                 this.ollamaService.analyzeScrapedContent(
                     chunk,
                     analysisType,

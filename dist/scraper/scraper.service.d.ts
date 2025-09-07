@@ -1,34 +1,7 @@
-import { HtmlParserService, ParsedContent } from './html-parser.service';
+import { HtmlParserService } from './html-parser.service';
 import { OllamaService } from '../ai/ollama.service';
 import { McpClientService } from '../mcp/mcp-client.service';
-export interface ScrapingResult {
-    url: string;
-    title: string;
-    content: ParsedContent;
-    analysis: {
-        summary: string;
-        keyPoints: string;
-        categories: string;
-    };
-    metadata: {
-        scrapedAt: Date;
-        processingTime: number;
-        contentLength: number;
-    };
-}
-export interface ScrapingJobOptions {
-    maxScrolls?: number;
-    scrollDelay?: number;
-    waitForNetworkIdle?: boolean;
-    userAgent?: string;
-    viewport?: {
-        width: number;
-        height: number;
-    };
-    analysisType?: 'summary' | 'extract' | 'categorize';
-    model?: string;
-    chunkSize?: number;
-}
+import { ScrapingResult, ScrapingJobOptions } from './interfaces';
 export declare class ScraperService {
     private readonly mcpClient;
     private readonly htmlParser;

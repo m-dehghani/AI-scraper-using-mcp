@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Tool } from './mcp.types';
 import { z } from 'zod';
-import { ScraperService, ScrapingJobOptions } from '../scraper/scraper.service';
+import { ScraperService } from '../scraper/scraper.service';
+import { ScrapingJobOptions } from '../scraper/interfaces';
 import { XRayParserService } from '../scraper/xray-parser.service';
 
 const ScrapingOptionsSchema = z.object({

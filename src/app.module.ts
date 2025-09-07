@@ -4,6 +4,6 @@ import { AiModule } from './ai/ai.module';
 import { McpModule } from './mcp/mcp.module';
 
 @Module({
-  imports: [ScraperModule, AiModule, McpModule],
+    imports: [ScraperModule, AiModule, McpModule],
 })
 export class AppModule {}

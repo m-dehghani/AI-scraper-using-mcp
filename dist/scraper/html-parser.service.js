@@ -71,7 +71,7 @@ let HtmlParserService = HtmlParserService_1 = class HtmlParserService {
         this.removeUnwantedElements($);
         const content = [];
         if (selectors.length > 0) {
-            selectors.forEach((selector) => {
+            selectors.forEach(selector => {
                 $(selector).each((_, element) => {
                     const text = $(element).text().trim();
                     if (text) {
@@ -91,7 +91,7 @@ let HtmlParserService = HtmlParserService_1 = class HtmlParserService {
                 'main',
                 '.container',
             ];
-            defaultSelectors.forEach((selector) => {
+            defaultSelectors.forEach(selector => {
                 $(selector).each((_, element) => {
                     const text = $(element).text().trim();
                     if (text && text.length > 100) {
@@ -106,7 +106,7 @@ let HtmlParserService = HtmlParserService_1 = class HtmlParserService {
                 }
             }
         }
-        return content.filter((text) => text.length > 50);
+        return content.filter(text => text.length > 50);
     }
     removeUnwantedElements($) {
         $('script, style, nav, header, footer, aside, .advertisement, .ads, .sidebar').remove();

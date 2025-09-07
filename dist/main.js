@@ -30,7 +30,7 @@ async function bootstrap() {
         logger.log('Application shutdown complete.');
     }
 }
-bootstrap().catch((error) => {
+bootstrap().catch(error => {
     console.error('Fatal error during bootstrap:', error);
     process.exit(1);
 });

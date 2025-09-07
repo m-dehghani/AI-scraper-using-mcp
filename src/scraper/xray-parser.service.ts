@@ -1,18 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Xray from 'x-ray';
-
-export interface XRaySchema {
-    [key: string]: string | XRaySchema | string[];
-}
-
-export interface XRayParsingResult {
-    url: string;
-    data: any;
-    metadata: {
-        scrapedAt: string;
-        processingTime: number;
-    };
-}
+import { XRaySchema, XRayParsingResult } from './interfaces';
 
 @Injectable()
 export class XRayParserService {

@@ -1,18 +1,4 @@
-export interface ParsedContent {
-    title: string;
-    text: string;
-    links: string[];
-    images: string[];
-    headings: string[];
-    metadata: Record<string, string>;
-    sections: ContentSection[];
-}
-export interface ContentSection {
-    type: 'heading' | 'paragraph' | 'list' | 'table' | 'other';
-    content: string;
-    level?: number;
-    items?: string[];
-}
+import { ParsedContent } from './interfaces';
 export declare class HtmlParserService {
     private readonly logger;
     parseContent(html: string): ParsedContent;

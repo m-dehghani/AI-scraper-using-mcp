@@ -1,8 +1,19 @@
 # AI-Powered Web Scraper Setup Guide
 
-This application provides an AI-powered web scraping system with infinite scroll support and local LLM integration using Ollama.
+This application provides an AI-powered web scraping system with infinite scroll support, local LLM integration using Ollama, and Model Context Protocol (MCP) integration for seamless LLM orchestration.
 
-## Prerequisites
+## 🚀 Features
+
+- **🤖 AI-Powered Analysis**: Local LLM integration using Ollama for privacy-focused content analysis
+- **🌐 Infinite Scroll Support**: Advanced browser automation with Puppeteer-extra and stealth plugins
+- **📊 Schema-Based Extraction**: X-Ray integration for declarative HTML parsing
+- **🔧 MCP Integration**: Standardized tool exposure for LLM agents and external systems
+- **⚡ Batch Processing**: Efficient multi-URL scraping with parallel processing
+- **🛡️ Anti-Detection**: Stealth browser automation to avoid bot detection
+- **📈 Health Monitoring**: Built-in service health checks and monitoring
+- **🎯 Flexible Parsing**: Multiple parsing strategies (Cheerio, X-Ray) for different use cases
+
+## 📋 Prerequisites
 
 ### 1. Install Ollama
 Download and install Ollama from [https://ollama.ai](https://ollama.ai)
@@ -22,19 +33,24 @@ ollama pull llama3.1:8b
 curl http://localhost:11434/api/tags
 ```
 
-## Installation
+## 🛠️ Installation
 
-1. Install dependencies:
+1. **Install dependencies:**
 ```bash
 npm install
 ```
 
-2. Install Playwright browsers:
+2. **Build the project:**
 ```bash
-npx playwright install chromium
+npm run build
 ```
 
-## Environment Configuration
+3. **Run the application:**
+```bash
+npm start
+```
+
+## 🔧 Environment Configuration
 
 Create a `.env` file in the project root:
 
@@ -56,25 +72,52 @@ DEFAULT_MODEL=llama3
 DEFAULT_TEMPERATURE=0.7
 ```
 
-## Usage
+## 🎯 Available MCP Tools
 
-### Running the Application
-```bash
-npm run start:dev
-```
+The application exposes the following MCP tools for LLM agent interaction:
 
-### Available MCP Tools
+### 1. `scrape-infinite-scroll`
+Scrapes content from a web page with infinite scroll functionality and AI analysis.
 
-The application exposes the following MCP tools:
+**Parameters:**
+- `url` (string): Target URL to scrape
+- `maxScrolls` (number, optional): Maximum scroll attempts (default: 20)
+- `scrollDelay` (number, optional): Delay between scrolls in ms (default: 2000)
+- `analysisType` (enum): 'summary', 'extract', or 'categorize' (default: 'summary')
+- `model` (string, optional): Ollama model to use (default: 'llama3')
+- `chunkSize` (number, optional): Content chunk size for AI processing (default: 2000)
 
-1. **scrape-infinite-scroll**: Scrape a single URL with infinite scroll support
-2. **scrape-batch-urls**: Scrape multiple URLs in batch
-3. **extract-structured-data**: Extract structured data according to a schema
-4. **scraper-health-check**: Check the health status of services
+### 2. `scrape-batch-urls`
+Scrapes multiple URLs in batch with infinite scroll and AI analysis.
 
-### Example Usage
+**Parameters:**
+- `urls` (array): Array of URLs to scrape (max 10)
+- `maxScrolls`, `scrollDelay`, `analysisType`, `model`, `chunkSize` (same as above)
 
-#### Single URL Scraping
+### 3. `extract-structured-data`
+Extracts structured data from a web page based on a custom schema using AI.
+
+**Parameters:**
+- `url` (string): Target URL
+- `schema` (string): Description of data to extract
+- `maxScrolls`, `scrollDelay`, `model` (same as above)
+
+### 4. `scrape-with-xray`
+Scrapes content using X-Ray with schema-based extraction.
+
+**Parameters:**
+- `url` (string): Target URL
+- `schema` (object): X-Ray schema for data extraction
+
+### 5. `get-xray-schemas`
+Returns common X-Ray schemas for different content types.
+
+### 6. `scraper-health-check`
+Checks the health status of all scraper services.
+
+## 📖 Usage Examples
+
+### Single URL Scraping
 ```typescript
 // Example: Scrape a news website with infinite scroll
 const result = await scraper.scrapeAndAnalyze('https://example-news-site.com', {
@@ -84,7 +127,7 @@ const result = await scraper.scrapeAndAnalyze('https://example-news-site.com', {
 });
 ```
 
-#### Batch Scraping
+### Batch Scraping
 ```typescript
 // Example: Scrape multiple URLs
 const urls = [
@@ -99,7 +142,7 @@ const results = await scraper.scrapeMultipleUrls(urls, {
 });
 ```
 
-#### Structured Data Extraction
+### Structured Data Extraction
 ```typescript
 // Example: Extract product information
 const schema = "Extract product name, price, description, and availability";
@@ -109,15 +152,39 @@ const result = await scraper.extractStructuredData(
 );
 ```
 
-## Architecture
+### X-Ray Schema-Based Extraction
+```typescript
+// Example: Extract structured data using X-Ray
+const schema = {
+    title: 'h1',
+    content: ['.article-content p'],
+    author: '.author',
+    date: '.published-date'
+};
+
+const result = await xrayParser.scrapeUrl('https://blog.example.com/post', schema);
+```
+
+## 🏗️ Architecture
 
 ### Core Components
 
-1. **BrowserManagerService**: Handles headless browser automation with Playwright
-2. **HtmlParserService**: Parses and extracts content from HTML using Cheerio
-3. **OllamaService**: Integrates with local Ollama LLM for AI analysis
-4. **ScraperService**: Orchestrates the entire scraping pipeline
-5. **ScraperTool**: Exposes MCP tools for external interaction
+1. **McpClientService**: Puppeteer-extra browser automation with stealth capabilities
+2. **HtmlParserService**: Cheerio-based HTML parsing and content extraction
+3. **XRayParserService**: Schema-based declarative HTML parsing
+4. **OllamaService**: Official Ollama package integration for local LLM inference
+5. **ScraperService**: Orchestrates the complete scraping and analysis pipeline
+6. **ScraperTool**: Exposes MCP tools for external LLM agent interaction
+
+### Technology Stack
+
+- **NestJS**: Modular backend framework with dependency injection
+- **Puppeteer-extra + Stealth Plugin**: Advanced browser automation with anti-detection
+- **Ollama**: Local LLM hosting and inference
+- **Cheerio**: Server-side jQuery implementation for HTML parsing
+- **X-Ray**: Declarative web scraping with schema-based extraction
+- **Zod**: Runtime type validation for MCP tool parameters
+- **TypeScript**: Type-safe development with modern ES features
 
 ### Features
 
@@ -128,8 +195,9 @@ const result = await scraper.extractStructuredData(
 - **Health Monitoring**: Built-in health checks for all services
 - **Error Handling**: Robust error handling and retry mechanisms
 - **Progress Reporting**: Real-time progress updates via MCP
+- **Anti-Detection**: Stealth browser automation to avoid bot detection
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
@@ -139,8 +207,9 @@ const result = await scraper.extractStructuredData(
    - Verify the API endpoint: `curl http://localhost:11434/api/tags`
 
 2. **Browser Launch Failed**
-   - Install Playwright browsers: `npx playwright install chromium`
+   - Puppeteer-extra handles browser installation automatically
    - Check system dependencies for headless browser support
+   - Ensure sufficient system resources
 
 3. **Memory Issues**
    - Reduce `chunkSize` for large pages
@@ -162,24 +231,61 @@ const result = await scraper.extractStructuredData(
    - Monitor memory usage during batch operations
    - Implement proper cleanup in long-running processes
 
-## Development
+## 🏃‍♂️ Development
+
+### Available Scripts
+
+```bash
+# Development
+npm run start:dev
+
+# Build
+npm run build
+
+# Production
+npm run start:prod
+
+# Lint
+npm run lint
+
+# Format
+npm run format
+```
 
 ### Project Structure
 ```
 src/
-├── scraper/          # Browser automation and HTML parsing
-├── ai/               # Ollama integration
-├── mcp/              # MCP tools and protocol
-└── main.ts           # Application entry point
+├── ai/                    # AI/LLM integration
+│   ├── ai.module.ts
+│   └── ollama.service.ts
+├── mcp/                   # MCP tools and protocol
+│   ├── mcp.module.ts
+│   ├── mcp-client.service.ts
+│   ├── mcp.types.ts
+│   └── scraper.tool.ts
+├── scraper/               # Web scraping services
+│   ├── scraper.module.ts
+│   ├── scraper.service.ts
+│   ├── html-parser.service.ts
+│   └── xray-parser.service.ts
+├── app.module.ts          # Root module
+└── main.ts               # Application entry point
 ```
 
 ### Adding New Features
 
-1. **New Scraping Strategies**: Extend `BrowserManagerService`
+1. **New Scraping Strategies**: Extend `McpClientService`
 2. **Additional AI Models**: Enhance `OllamaService`
-3. **Custom Parsers**: Add new methods to `HtmlParserService`
+3. **Custom Parsers**: Add new methods to `HtmlParserService` or `XRayParserService`
 4. **New MCP Tools**: Create additional tools in `mcp/` directory
 
-## License
+## 🔒 Security Considerations
+
+- **Local LLM Processing**: All AI analysis happens locally using Ollama
+- **No External API Calls**: Content analysis is performed on your own infrastructure
+- **Stealth Browser Automation**: Anti-detection measures to avoid bot blocking
+- **Rate Limiting**: Built-in delays and scroll management to be respectful to target sites
+
+## 📄 License
 
 This project is licensed under the MIT License.

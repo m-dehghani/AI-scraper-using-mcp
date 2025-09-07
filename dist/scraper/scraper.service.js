@@ -127,7 +127,7 @@ let ScraperService = ScraperService_1 = class ScraperService {
         try {
             const chunks = this.htmlParser.chunkContent(content.text, chunkSize);
             this.logger.log(`Processing ${chunks.length} content chunks for AI analysis`);
-            const analysisPromises = chunks.map((chunk) => this.ollamaService.analyzeScrapedContent(chunk, analysisType, model));
+            const analysisPromises = chunks.map(chunk => this.ollamaService.analyzeScrapedContent(chunk, analysisType, model));
             const chunkAnalyses = await Promise.all(analysisPromises);
             const combinedAnalysis = chunkAnalyses.join('\n\n');
             const summary = await this.ollamaService.analyzeScrapedContent(combinedAnalysis, 'summary', model);

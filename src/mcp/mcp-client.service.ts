@@ -2,27 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Browser, Page } from 'puppeteer';
-
-export interface McpScrapingOptions {
-    url: string;
-    maxScrolls?: number;
-    scrollDelay?: number;
-    waitForNetworkIdle?: boolean;
-    userAgent?: string;
-    viewport?: { width: number; height: number };
-}
-
-export interface McpScrapingResult {
-    url: string;
-    title: string;
-    content: string;
-    html: string;
-    metadata: {
-        scrapedAt: string;
-        processingTime: number;
-        contentLength: number;
-    };
-}
+import { McpScrapingOptions, McpScrapingResult } from './interfaces';
 
 @Injectable()
 export class McpClientService {
@@ -155,7 +135,7 @@ export class McpClientService {
             });
 
             // Wait for content to load
-            await new Promise((resolve) => setTimeout(resolve, scrollDelay));
+            await new Promise(resolve => setTimeout(resolve, scrollDelay));
 
             // Check if we can scroll more
             const canScrollMore = await page.evaluate(() => {
