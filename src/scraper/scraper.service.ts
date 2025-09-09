@@ -91,28 +91,13 @@ export class ScraperService {
         this.logger.log(`Starting batch scraping for ${urls.length} URLs`);
 
         const results: ScrapingResult[] = [];
-        const errors: string[] = [];
-
-        for (const url of urls) {
-            try {
-                const result = await this.scrapeAndAnalyze(url, options);
-                results.push(result);
-                this.logger.log(`Successfully scraped: ${url}`);
-            } catch (error) {
-                const errorMsg = `Failed to scrape ${url}: ${error.message}`;
-                errors.push(errorMsg);
-                this.logger.error(errorMsg);
-            }
-        }
-
-        this.logger.log(
-            `Batch scraping completed. Success: ${results.length}, Errors: ${errors.length}`,
+        const scrapeTaskList = urls.map(url =>
+            this.scrapeAndAnalyze(url, options),
         );
+        const scrapeTaskResults = await Promise.all(scrapeTaskList);
+        results.push(...scrapeTaskResults);
 
-        if (errors.length > 0) {
-            this.logger.warn('Some URLs failed to scrape:', errors);
-        }
-
+        this.logger.log(`Batch scraping completed. Success: ${results.length}`);
         return results;
     }
 
@@ -183,7 +168,7 @@ export class ScraperService {
             );
 
             // Process each chunk and combine results
-            const analysisPromises = chunks.map((chunk) =>
+            const analysisPromises = chunks.map(chunk =>
                 this.ollamaService.analyzeScrapedContent(
                     chunk,
                     analysisType,

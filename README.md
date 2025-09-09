@@ -6,12 +6,12 @@ A sophisticated web scraping system built with NestJS that combines headless bro
 
 - **🤖 AI-Powered Analysis**: Local LLM integration using Ollama for privacy-focused content analysis
 - **🌐 Infinite Scroll Support**: Advanced browser automation with Puppeteer-extra and stealth plugins
-- **📊 Schema-Based Extraction**: X-Ray integration for declarative HTML parsing
+- **📊 Schema-Based Extraction**: AI-guided extraction using content-aware prompts
 - **🔧 MCP Integration**: Standardized tool exposure for LLM agents and external systems
 - **⚡ Batch Processing**: Efficient multi-URL scraping with parallel processing
 - **🛡️ Anti-Detection**: Stealth browser automation to avoid bot detection
 - **📈 Health Monitoring**: Built-in service health checks and monitoring
-- **🎯 Flexible Parsing**: Multiple parsing strategies (Cheerio, X-Ray) for different use cases
+- **🎯 Flexible Parsing**: AI-centric parsing with Cheerio-based helpers
 
 ## 🏗️ Architecture
 
@@ -19,7 +19,7 @@ A sophisticated web scraping system built with NestJS that combines headless bro
 
 - **McpClientService**: Puppeteer-extra browser automation with stealth capabilities
 - **HtmlParserService**: Cheerio-based HTML parsing and content extraction
-- **XRayParserService**: Schema-based declarative HTML parsing
+
 - **OllamaService**: Official Ollama package integration for local LLM inference
 - **ScraperService**: Orchestrates the complete scraping and analysis pipeline
 - **ScraperTool**: Exposes MCP tools for external LLM agent interaction
@@ -30,7 +30,6 @@ A sophisticated web scraping system built with NestJS that combines headless bro
 - **Puppeteer-extra + Stealth Plugin**: Advanced browser automation with anti-detection
 - **Ollama**: Local LLM hosting and inference
 - **Cheerio**: Server-side jQuery implementation for HTML parsing
-- **X-Ray**: Declarative web scraping with schema-based extraction
 - **Zod**: Runtime type validation for MCP tool parameters
 - **TypeScript**: Type-safe development with modern ES features
 
@@ -103,15 +102,7 @@ Extracts structured data from a web page based on a custom schema using AI.
 - `schema` (string): Description of data to extract
 - `maxScrolls`, `scrollDelay`, `model` (same as above)
 
-### 4. `scrape-with-xray`
-Scrapes content using X-Ray with schema-based extraction.
 
-**Parameters:**
-- `url` (string): Target URL
-- `schema` (object): X-Ray schema for data extraction
-
-### 5. `get-xray-schemas`
-Returns common X-Ray schemas for different content types.
 
 ### 6. `scraper-health-check`
 Checks the health status of all scraper services.
@@ -143,18 +134,7 @@ const results = await scraper.scrapeMultipleUrls(urls, {
 });
 ```
 
-### X-Ray Schema-Based Extraction
-```typescript
-// Extract structured data using X-Ray
-const schema = {
-    title: 'h1',
-    content: ['.article-content p'],
-    author: '.author',
-    date: '.published-date'
-};
 
-const result = await xrayParser.scrapeUrl('https://blog.example.com/post', schema);
-```
 
 ## 🔧 Configuration
 
@@ -215,7 +195,7 @@ src/
 │   ├── scraper.module.ts
 │   ├── scraper.service.ts
 │   ├── html-parser.service.ts
-│   └── xray-parser.service.ts
+
 ├── app.module.ts          # Root module
 └── main.ts               # Application entry point
 ```
@@ -274,4 +254,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Ollama](https://ollama.ai/) - Local LLM hosting
 - [Puppeteer](https://pptr.dev/) - Headless Chrome automation
 - [Cheerio](https://cheerio.js.org/) - Server-side HTML parsing
-- [X-Ray](https://github.com/lapwinglabs/x-ray) - Web scraping library

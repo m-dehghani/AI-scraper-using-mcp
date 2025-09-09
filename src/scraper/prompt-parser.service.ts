@@ -163,7 +163,7 @@ export class PromptParserService {
     ): Record<string, string> {
         const schema: Record<string, string> = {};
 
-        // Generate X-Ray schema based on parsed fields
+        // Generate CSS selector schema based on parsed fields
         parsedPrompt.fields.forEach((field) => {
             switch (field) {
                 case 'title':

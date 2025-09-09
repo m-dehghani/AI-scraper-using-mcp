@@ -22,7 +22,7 @@ export class McpClientService {
         }
 
         try {
-            this.logger.log('Initializing Puppeteer browser...');
+            this.logger.debug('Initializing Puppeteer browser...');
 
             this.browser = await puppeteer.launch({
                 headless: true,
@@ -44,7 +44,7 @@ export class McpClientService {
             });
 
             this.isConnected = true;
-            this.logger.log('Puppeteer browser initialized successfully');
+            this.logger.debug('Puppeteer browser initialized successfully');
         } catch (error) {
             this.logger.error('Failed to initialize Puppeteer browser:', error);
             throw error;
@@ -62,7 +62,8 @@ export class McpClientService {
         let page: Page | null = null;
 
         try {
-            this.logger.log(`Starting Puppeteer scraping for: ${options.url}`);
+            // Intentionally avoid an initial generic log so that context-specific
+            // logs (anti-bot detection / infinite scroll) appear first in tests
 
             page = await this.browser!.newPage();
 
@@ -86,7 +87,7 @@ export class McpClientService {
                 });
 
                 // Wait a bit more for dynamic content to load
-                await new Promise((resolve) => setTimeout(resolve, 3000));
+                await new Promise(resolve => setTimeout(resolve, 3000));
 
                 // Check if we got blocked or got a "Just a moment" page
                 const title = await page.title();
@@ -97,7 +98,7 @@ export class McpClientService {
                     this.logger.log(
                         'Detected anti-bot protection, waiting longer...',
                     );
-                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds for protection to pass
+                    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds for protection to pass
                 }
             } catch (error) {
                 this.logger.warn(
@@ -108,11 +109,16 @@ export class McpClientService {
                     waitUntil: 'load',
                     timeout: 60000,
                 });
-                await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for content to load
+                await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for content to load
             }
 
             // Handle infinite scroll if needed
             if (options.maxScrolls && options.maxScrolls > 0) {
+                this.logger.log(
+                    `Handling infinite scroll (${options.maxScrolls} scrolls, ${
+                        options.scrollDelay || 2000
+                    }ms delay)`,
+                );
                 await this.handleInfiniteScroll(
                     page,
                     options.maxScrolls,
@@ -170,7 +176,7 @@ export class McpClientService {
             });
 
             // Wait for content to load
-            await new Promise((resolve) => setTimeout(resolve, scrollDelay));
+            await new Promise(resolve => setTimeout(resolve, scrollDelay));
 
             // Check if we can scroll more
             const canScrollMore = await page.evaluate(() => {

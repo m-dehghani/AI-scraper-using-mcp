@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { PromptParserService } from './prompt-parser.service';
-import { ParsedPrompt } from './interfaces';
 
 describe('PromptParserService', () => {
     let service: PromptParserService;

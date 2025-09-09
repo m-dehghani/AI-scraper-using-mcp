@@ -8,8 +8,6 @@ import { UserInputService } from '../../src/user-input.service';
 import { PromptParserService } from '../../src/scraper/prompt-parser.service';
 import { CsvExportService } from '../../src/scraper/csv-export.service';
 import { ScraperService } from '../../src/scraper/scraper.service';
-import { XRayParserService } from '../../src/scraper/xray-parser.service';
-
 describe('Application Bootstrap (e2e)', () => {
     let app: INestApplication;
     let moduleFixture: TestingModule;
@@ -23,11 +21,6 @@ describe('Application Bootstrap (e2e)', () => {
                 scrapeWebsite: jest.fn(),
                 isHealthy: jest.fn().mockResolvedValue(true),
                 cleanup: jest.fn(),
-            })
-            .overrideProvider(XRayParserService)
-            .useValue({
-                parseWithSchema: jest.fn(),
-                createCustomSchema: jest.fn(),
             })
             .compile();
 
@@ -108,12 +101,6 @@ describe('Application Bootstrap (e2e)', () => {
             expect(service).toBeDefined();
             expect(typeof service.scrapeAndAnalyze).toBe('function');
         });
-
-        it('should register XRayParserService', () => {
-            const service = app.get<XRayParserService>(XRayParserService);
-            expect(service).toBeDefined();
-            expect(typeof service.parseWithSchema).toBe('function');
-        });
     });
 
     describe('Service Dependencies and Injection', () => {
@@ -150,10 +137,9 @@ describe('Application Bootstrap (e2e)', () => {
                 app.get<PromptParserService>(PromptParserService),
                 app.get<CsvExportService>(CsvExportService),
                 app.get<ScraperService>(ScraperService),
-                app.get<XRayParserService>(XRayParserService),
             ];
 
-            services.forEach((service) => {
+            services.forEach(service => {
                 expect(service).toBeDefined();
             });
         });
@@ -166,11 +152,9 @@ describe('Application Bootstrap (e2e)', () => {
             const promptParser =
                 app.get<PromptParserService>(PromptParserService);
             const csvExport = app.get<CsvExportService>(CsvExportService);
-            const xrayParser = app.get<XRayParserService>(XRayParserService);
             expect(scraperService).toBeDefined();
             expect(promptParser).toBeDefined();
             expect(csvExport).toBeDefined();
-            expect(xrayParser).toBeDefined();
         });
 
         it('should have AiModule properly configured', () => {
@@ -217,7 +201,7 @@ describe('Application Bootstrap (e2e)', () => {
                 app.get<McpClientService>(McpClientService),
             ];
 
-            services.forEach((service) => {
+            services.forEach(service => {
                 expect(service).toBeDefined();
             });
         });

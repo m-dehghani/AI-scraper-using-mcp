@@ -6,6 +6,7 @@ import { PromptParserService } from '../../src/scraper/prompt-parser.service';
 import { CsvExportService } from '../../src/scraper/csv-export.service';
 import { OllamaService } from '../../src/ai/ollama.service';
 import { McpClientService } from '../../src/mcp/mcp-client.service';
+import { HtmlParserService } from '../../src/scraper/html-parser.service';
 import { TestHelpers } from '../utils/test-helpers';
 
 describe('Scraper Integration Tests', () => {
@@ -22,6 +23,7 @@ describe('Scraper Integration Tests', () => {
             providers: [
                 InteractiveScraperService,
                 ScraperService,
+                HtmlParserService,
                 PromptParserService,
                 CsvExportService,
                 OllamaService,
@@ -340,14 +342,14 @@ describe('Scraper Integration Tests', () => {
 
             const startTime = Date.now();
             const results = await Promise.all(
-                requests.map((request) =>
+                requests.map(request =>
                     interactiveScraper.processPromptRequest(request),
                 ),
             );
             const endTime = Date.now();
 
             expect(results).toHaveLength(5);
-            expect(results.every((result) => result.success)).toBe(true);
+            expect(results.every(result => result.success)).toBe(true);
             expect(endTime - startTime).toBeLessThan(10000); // Should complete within 10 seconds
         });
     });

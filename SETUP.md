@@ -6,12 +6,12 @@ This application provides an AI-powered web scraping system with infinite scroll
 
 - **🤖 AI-Powered Analysis**: Local LLM integration using Ollama for privacy-focused content analysis
 - **🌐 Infinite Scroll Support**: Advanced browser automation with Puppeteer-extra and stealth plugins
-- **📊 Schema-Based Extraction**: X-Ray integration for declarative HTML parsing
+- **📊 Schema-Based Extraction**: AI-guided extraction using content-aware prompts
 - **🔧 MCP Integration**: Standardized tool exposure for LLM agents and external systems
 - **⚡ Batch Processing**: Efficient multi-URL scraping with parallel processing
 - **🛡️ Anti-Detection**: Stealth browser automation to avoid bot detection
 - **📈 Health Monitoring**: Built-in service health checks and monitoring
-- **🎯 Flexible Parsing**: Multiple parsing strategies (Cheerio, X-Ray) for different use cases
+- **🎯 Flexible Parsing**: AI-centric parsing with Cheerio-based helpers
 
 ## 📋 Prerequisites
 
@@ -102,15 +102,7 @@ Extracts structured data from a web page based on a custom schema using AI.
 - `schema` (string): Description of data to extract
 - `maxScrolls`, `scrollDelay`, `model` (same as above)
 
-### 4. `scrape-with-xray`
-Scrapes content using X-Ray with schema-based extraction.
 
-**Parameters:**
-- `url` (string): Target URL
-- `schema` (object): X-Ray schema for data extraction
-
-### 5. `get-xray-schemas`
-Returns common X-Ray schemas for different content types.
 
 ### 6. `scraper-health-check`
 Checks the health status of all scraper services.
@@ -152,18 +144,7 @@ const result = await scraper.extractStructuredData(
 );
 ```
 
-### X-Ray Schema-Based Extraction
-```typescript
-// Example: Extract structured data using X-Ray
-const schema = {
-    title: 'h1',
-    content: ['.article-content p'],
-    author: '.author',
-    date: '.published-date'
-};
 
-const result = await xrayParser.scrapeUrl('https://blog.example.com/post', schema);
-```
 
 ## 🏗️ Architecture
 
@@ -171,7 +152,7 @@ const result = await xrayParser.scrapeUrl('https://blog.example.com/post', schem
 
 1. **McpClientService**: Puppeteer-extra browser automation with stealth capabilities
 2. **HtmlParserService**: Cheerio-based HTML parsing and content extraction
-3. **XRayParserService**: Schema-based declarative HTML parsing
+
 4. **OllamaService**: Official Ollama package integration for local LLM inference
 5. **ScraperService**: Orchestrates the complete scraping and analysis pipeline
 6. **ScraperTool**: Exposes MCP tools for external LLM agent interaction
@@ -182,7 +163,7 @@ const result = await xrayParser.scrapeUrl('https://blog.example.com/post', schem
 - **Puppeteer-extra + Stealth Plugin**: Advanced browser automation with anti-detection
 - **Ollama**: Local LLM hosting and inference
 - **Cheerio**: Server-side jQuery implementation for HTML parsing
-- **X-Ray**: Declarative web scraping with schema-based extraction
+
 - **Zod**: Runtime type validation for MCP tool parameters
 - **TypeScript**: Type-safe development with modern ES features
 
@@ -267,7 +248,7 @@ src/
 │   ├── scraper.module.ts
 │   ├── scraper.service.ts
 │   ├── html-parser.service.ts
-│   └── xray-parser.service.ts
+
 ├── app.module.ts          # Root module
 └── main.ts               # Application entry point
 ```
@@ -276,7 +257,7 @@ src/
 
 1. **New Scraping Strategies**: Extend `McpClientService`
 2. **Additional AI Models**: Enhance `OllamaService`
-3. **Custom Parsers**: Add new methods to `HtmlParserService` or `XRayParserService`
+3. **Custom Parsers**: Add new methods to `HtmlParserService`
 4. **New MCP Tools**: Create additional tools in `mcp/` directory
 
 ## 🔒 Security Considerations

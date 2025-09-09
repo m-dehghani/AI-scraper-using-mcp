@@ -3,7 +3,6 @@ import { Tool } from './mcp.types';
 import { z } from 'zod';
 import { ScraperService } from '../scraper/scraper.service';
 import { ScrapingJobOptions } from '../scraper/interfaces';
-import { XRayParserService } from '../scraper/xray-parser.service';
 
 const ScrapingOptionsSchema = z.object({
     url: z.string().url('Invalid URL format'),
@@ -41,10 +40,7 @@ const StructuredDataSchema = z.object({
 export class ScraperTool {
     private readonly logger = new Logger(ScraperTool.name);
 
-    constructor(
-        private readonly scraperService: ScraperService,
-        private readonly xrayParser: XRayParserService,
-    ) {}
+    constructor(private readonly scraperService: ScraperService) {}
 
     @Tool({
         name: 'scrape-infinite-scroll',
@@ -237,66 +233,5 @@ export class ScraperTool {
         }
     }
 
-    @Tool({
-        name: 'scrape-with-xray',
-        description:
-            'Scrapes content from a web page using X-Ray with schema-based extraction',
-        parameters: z.object({
-            url: z.string().url('Invalid URL format'),
-            schema: z
-                .record(z.string())
-                .describe('X-Ray schema for data extraction'),
-        }),
-    })
-    public async scrapeWithXRay(params: any): Promise<any> {
-        try {
-            this.logger.log(`Scraping with X-Ray: ${params.url}`);
-
-            const result = await this.xrayParser.scrapeUrl(
-                params.url,
-                params.schema,
-            );
-
-            this.logger.log('X-Ray scraping completed successfully');
-            return {
-                success: true,
-                url: result.url,
-                data: result.data,
-                metadata: result.metadata,
-            };
-        } catch (error) {
-            this.logger.error('X-Ray scraping failed', error);
-            return {
-                success: false,
-                url: params.url,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            };
-        }
-    }
-
-    @Tool({
-        name: 'get-xray-schemas',
-        description:
-            'Returns common X-Ray schemas for different types of content',
-        parameters: z.object({}),
-    })
-    public getXRaySchemas() {
-        try {
-            this.logger.log('Getting X-Ray schemas');
-
-            const schemas = this.xrayParser.getCommonSchemas();
-
-            return {
-                success: true,
-                schemas,
-                description: 'Common X-Ray schemas for different content types',
-            };
-        } catch (error) {
-            this.logger.error('Failed to get X-Ray schemas', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            };
-        }
-    }
+    // X-Ray based tools removed (AI-only flow)
 }

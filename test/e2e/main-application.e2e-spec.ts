@@ -123,11 +123,11 @@ describe('Main Application Flow (e2e)', () => {
 
             const invalidUrls = ['not-a-url', '://missing-protocol', 'http://'];
 
-            validUrls.forEach((url) => {
+            validUrls.forEach(url => {
                 expect(() => new URL(url)).not.toThrow();
             });
 
-            invalidUrls.forEach((url) => {
+            invalidUrls.forEach(url => {
                 expect(() => new URL(url)).toThrow();
             });
         });
@@ -140,7 +140,7 @@ describe('Main Application Flow (e2e)', () => {
                 'find the best deals on electronics',
             ];
 
-            testPrompts.forEach((prompt) => {
+            testPrompts.forEach(prompt => {
                 const parsed = promptParser.parsePrompt(prompt);
 
                 expect(parsed).toBeDefined();
@@ -154,7 +154,7 @@ describe('Main Application Flow (e2e)', () => {
         it('should handle empty or invalid prompts', () => {
             const invalidPrompts = ['', '   ', null, undefined];
 
-            invalidPrompts.forEach((prompt) => {
+            invalidPrompts.forEach(prompt => {
                 if (prompt !== null && prompt !== undefined) {
                     const parsed = promptParser.parsePrompt(prompt);
                     expect(parsed).toBeDefined();
@@ -280,14 +280,10 @@ describe('Main Application Flow (e2e)', () => {
 
             jest.spyOn(ollamaService, 'processPrompt')
                 .mockResolvedValueOnce(
-                    `Here are the products I found: [
-                        { "title": "Product 1", "price": "$10" }
-                    ]`,
+                    `[{ "title": "Product 1", "price": "$10" }]`,
                 )
                 .mockResolvedValueOnce(
-                    `Here are the articles I found: [
-                        { "title": "Article 1", "author": "Author 1" }
-                    ]`,
+                    `[{ "title": "Article 1", "author": "Author 1" }]`,
                 );
 
             // Ensure output directory exists
@@ -303,7 +299,7 @@ describe('Main Application Flow (e2e)', () => {
             }
 
             expect(results).toHaveLength(2);
-            results.forEach((result) => {
+            results.forEach(result => {
                 expect(result.success).toBe(true);
             });
 
@@ -426,9 +422,7 @@ describe('Main Application Flow (e2e)', () => {
             });
 
             jest.spyOn(ollamaService, 'processPrompt').mockResolvedValue(
-                `Here are the products I found: [
-                    { "title": "Product 1", "price": "$10" }
-                ]`,
+                `[{ "title": "Product 1", "price": "$10" }]`,
             );
 
             const result =
@@ -504,14 +498,14 @@ describe('Main Application Flow (e2e)', () => {
 
             const startTime = Date.now();
             const results = await Promise.all(
-                concurrentRequests.map((request) =>
+                concurrentRequests.map(request =>
                     interactiveScraper.processPromptRequest(request),
                 ),
             );
             const endTime = Date.now();
 
             expect(results).toHaveLength(3);
-            results.forEach((result) => {
+            results.forEach(result => {
                 expect(result.success).toBe(true);
             });
 

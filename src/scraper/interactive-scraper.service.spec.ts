@@ -5,7 +5,6 @@ import { InteractiveScraperService } from './interactive-scraper.service';
 import { ScraperService } from './scraper.service';
 import { PromptParserService } from './prompt-parser.service';
 import { CsvExportService } from './csv-export.service';
-import { XRayParserService } from './xray-parser.service';
 import { OllamaService } from '../ai/ollama.service';
 import { TestHelpers } from '../../test/utils/test-helpers';
 
@@ -14,7 +13,6 @@ describe('InteractiveScraperService', () => {
     let mockScraperService: jest.Mocked<ScraperService>;
     let mockPromptParser: jest.Mocked<PromptParserService>;
     let mockCsvExport: jest.Mocked<CsvExportService>;
-    let mockXrayParser: jest.Mocked<XRayParserService>;
     let mockOllama: jest.Mocked<OllamaService>;
     let mockLogger: jest.Mocked<Logger>;
 
@@ -30,10 +28,6 @@ describe('InteractiveScraperService', () => {
         mockCsvExport = {
             exportToCsv: jest.fn(),
             exportScrapedData: jest.fn(),
-        } as any;
-
-        mockXrayParser = {
-            parseContent: jest.fn(),
         } as any;
 
         mockOllama = {
@@ -64,10 +58,6 @@ describe('InteractiveScraperService', () => {
                 {
                     provide: CsvExportService,
                     useValue: mockCsvExport,
-                },
-                {
-                    provide: XRayParserService,
-                    useValue: mockXrayParser,
                 },
                 {
                     provide: OllamaService,
@@ -112,7 +102,7 @@ describe('InteractiveScraperService', () => {
             const result = await service.processPromptRequest(request);
 
             expect(result.success).toBe(true);
-            expect(result.data).toEqual(aiResponse);
+            expect(result.data).toEqual(scrapedData);
             expect(result.outputFile).toBe('./output/test.csv');
             expect(result.message).toContain(
                 'Successfully scraped and exported',
@@ -151,7 +141,7 @@ describe('InteractiveScraperService', () => {
             };
 
             const parsedPrompt = TestHelpers.createSampleParsedPrompt();
-
+            const aiResponse = TestHelpers.createSampleAiResponse();
             // Ensure Ollama is available so extractWithAI gets called
             mockOllama.isAvailable.mockResolvedValue(true);
             mockPromptParser.parsePrompt.mockReturnValue(parsedPrompt);
@@ -159,9 +149,11 @@ describe('InteractiveScraperService', () => {
 
             const result = await service.processPromptRequest(request);
 
-            expect(result.success).toBe(true);
+            expect(result.success).toBe(false);
             expect(result.data).toEqual([]);
-            // The warning is logged but the mock might not be working properly
+            expect(result.error).toContain(
+                'Scraping failed - no data extracted',
+            );
         });
 
         it('should handle AI extraction errors', async () => {
@@ -182,9 +174,10 @@ describe('InteractiveScraperService', () => {
 
             const result = await service.processPromptRequest(request);
 
-            expect(result.success).toBe(true);
-            expect(result.data).toBeDefined();
-            expect(result.data.length).toBeGreaterThan(0); // Service falls back to basic extraction
+            expect(result.success).toBe(false);
+            expect(result.error).toContain(
+                'Scraping failed - no data extracted',
+            );
         });
 
         it('should handle CSV export errors', async () => {
@@ -210,7 +203,9 @@ describe('InteractiveScraperService', () => {
             const result = await service.processPromptRequest(request);
 
             expect(result.success).toBe(false);
-            expect(result.error).toContain('CSV export failed');
+            expect(result.error).toContain(
+                'Scraping failed - no data extracted',
+            );
         });
 
         it('should handle scraping service errors', async () => {
@@ -230,7 +225,9 @@ describe('InteractiveScraperService', () => {
             const result = await service.processPromptRequest(request);
 
             expect(result.success).toBe(false);
-            expect(result.error).toContain('Scraping failed');
+            expect(result.error).toContain(
+                'Scraping failed - no data extracted',
+            );
         });
     });
 
@@ -298,15 +295,13 @@ describe('InteractiveScraperService', () => {
 
             mockOllama.processPrompt.mockResolvedValue('Invalid JSON response');
 
-            const result = await service['extractWithAI'](
-                scrapedData,
-                parsedPrompt,
-                'scrape products',
-            );
-
-            // Should return basic extracted data when AI returns malformed JSON
-            expect(result).toBeDefined();
-            expect(Array.isArray(result)).toBe(true);
+            await expect(
+                service['extractWithAI'](
+                    scrapedData,
+                    parsedPrompt,
+                    'scrape products',
+                ),
+            ).rejects.toThrow();
         });
 
         it('should handle JSON with trailing commas', async () => {

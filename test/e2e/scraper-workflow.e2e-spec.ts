@@ -383,12 +383,12 @@ describe('Scraper Workflow (e2e)', () => {
             jest.spyOn(mcpClient, 'scrapeWebsite').mockResolvedValue({
                 url: 'https://example.com',
                 title: 'Test Store',
-                content: 'Product data',
+                content: 'Product 1 - $10, Product 2 - $20, Product 3 - $30',
                 html: '<html><body>Content</body></html>',
                 metadata: {
                     scrapedAt: new Date().toISOString(),
                     processingTime: 100,
-                    contentLength: 12,
+                    contentLength: 120,
                 },
                 success: true,
             });

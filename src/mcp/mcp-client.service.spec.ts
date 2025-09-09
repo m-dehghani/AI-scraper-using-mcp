@@ -139,8 +139,8 @@ describe('McpClientService', () => {
             const result = await service.scrapeWebsite(options);
 
             expect(result.success).toBe(true);
-            expect(mockLogger.warn).toHaveBeenCalledWith(
-                expect.stringContaining('Navigation failed'),
+            expect((mockLogger.warn as jest.Mock).mock.calls[0][0]).toBe(
+                'Navigation failed, trying with basic load: Navigation failed',
             );
         });
 
@@ -162,7 +162,7 @@ describe('McpClientService', () => {
 
             await service.scrapeWebsite(options);
 
-            expect(mockLogger.log).toHaveBeenCalledWith(
+            expect((mockLogger.log as jest.Mock).mock.calls[0][0]).toBe(
                 'Detected anti-bot protection, waiting longer...',
             );
         });
@@ -176,7 +176,7 @@ describe('McpClientService', () => {
 
             // Mock scroll behavior
             let scrollCount = 0;
-            mockPage.evaluate.mockImplementation((fn) => {
+            mockPage.evaluate.mockImplementation(fn => {
                 if (fn.toString().includes('scrollTo')) {
                     scrollCount++;
                     return Promise.resolve();
@@ -196,7 +196,7 @@ describe('McpClientService', () => {
 
             await service.scrapeWebsite(options);
 
-            expect(mockLogger.log).toHaveBeenCalledWith(
+            expect((mockLogger.log as jest.Mock).mock.calls[0][0]).toBe(
                 'Handling infinite scroll (3 scrolls, 100ms delay)',
             );
         });
@@ -256,10 +256,12 @@ describe('McpClientService', () => {
             await service.cleanup();
 
             // The close method handles the error internally and logs it as a warning
-            expect(mockLogger.warn).toHaveBeenCalledWith(
+            expect((mockLogger.warn as jest.Mock).mock.calls[0][0]).toBe(
                 'Error closing Puppeteer browser:',
-                expect.any(Error),
             );
+            expect(
+                (mockLogger.warn as jest.Mock).mock.calls[0][1],
+            ).toBeInstanceOf(Error);
         });
     });
 });
